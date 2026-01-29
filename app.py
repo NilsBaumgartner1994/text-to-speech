@@ -36,7 +36,9 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Model configuration
-MODEL_NAME = "Qwen/Qwen3-TTS-12Hz-1.7B"
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen3-TTS-12Hz-1.7B")
+MODEL_PATH = os.getenv("MODEL_PATH")
+HF_ENDPOINT = os.getenv("HF_ENDPOINT")
 device = "cuda" if torch.cuda.is_available() else "cpu"
 logger.info(f"Using device: {device}")
 
@@ -48,11 +50,17 @@ def load_model():
     """Load the Qwen TTS model"""
     global model, tokenizer
     try:
-        logger.info(f"Loading model: {MODEL_NAME}")
+        source_label = MODEL_PATH or MODEL_NAME
+        if HF_ENDPOINT:
+            logger.info("Using Hugging Face endpoint: %s", HF_ENDPOINT)
+        logger.info("Loading model: %s", source_label)
         logger.info("This may take several minutes on first run...")
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
+        tokenizer = AutoTokenizer.from_pretrained(
+            source_label,
+            trust_remote_code=True,
+        )
         model = AutoModelForCausalLM.from_pretrained(
-            MODEL_NAME,
+            source_label,
             torch_dtype=torch.float16 if device == "cuda" else torch.float32,
             device_map="auto" if device == "cuda" else None,
             trust_remote_code=True
@@ -62,6 +70,10 @@ def load_model():
         logger.info("Model loaded successfully")
     except Exception as e:
         logger.error(f"Error loading model: {e}")
+        logger.info(
+            "Set MODEL_PATH to a local model folder or configure MODEL_NAME and "
+            "HF_ENDPOINT to point to a reachable Hugging Face mirror."
+        )
         logger.warning("Model loading failed. The service will continue but TTS generation may not work.")
         # Don't raise - allow service to start even if model loading fails
         # This is useful for testing the UI without the full model

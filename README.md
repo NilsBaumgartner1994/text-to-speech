@@ -92,6 +92,9 @@ You can customize the following environment variables in `docker-compose.yml`:
 
 - `TRANSFORMERS_CACHE`: Cache directory for Hugging Face models
 - `HF_HOME`: Hugging Face home directory
+- `MODEL_NAME`: Override the model ID (default: `Qwen/Qwen3-TTS-12Hz-1.7B`)
+- `MODEL_PATH`: Point to a local, pre-downloaded model folder
+- `HF_ENDPOINT`: Optional Hugging Face mirror endpoint (e.g. `https://hf-mirror.com`)
 
 ## Development
 
@@ -130,8 +133,26 @@ python app.py
 ### Model download fails
 
 - Check internet connection
-- Try manually downloading the model first
+- Try manually downloading the model first and set `MODEL_PATH`
 - Increase Docker memory limits
+- If Hugging Face is blocked in your region, set `HF_ENDPOINT=https://hf-mirror.com`
+
+### Manual model download (no token)
+
+The public model is hosted on Hugging Face at:
+
+- https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B
+
+If you cannot reach Hugging Face directly, you can download from a mirror and point the
+service to the local folder:
+
+```bash
+git lfs install
+git clone https://hf-mirror.com/Qwen/Qwen3-TTS-12Hz-1.7B
+```
+
+Then set `MODEL_PATH` to the cloned folder (or export `HF_ENDPOINT=https://hf-mirror.com`
+to let Transformers download via the mirror).
 
 ### Audio generation is slow
 
