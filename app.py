@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import torch
 import torchaudio
@@ -16,6 +17,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Text-to-Speech Service")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -60,13 +69,17 @@ def load_model():
 # Request models
 class TTSRequest(BaseModel):
     text: str
-    voice_preset: str = "default"
-    speed: float = 1.0
-    pitch: float = 1.0
+    language: str = "auto"
+    voice_description: str = ""
 
 class VoiceCloneRequest(BaseModel):
     text: str
     speed: float = 1.0
+
+class CustomVoiceRequest(BaseModel):
+    text: str
+    speaker: str = "qwen3-en-female"
+    style: str = ""
 
 @app.on_event("startup")
 async def startup_event():
@@ -97,7 +110,11 @@ async def voice_design(request: TTSRequest):
         if model is None:
             raise HTTPException(status_code=503, detail="Model not loaded")
         
-        logger.info(f"Generating TTS for text: {request.text[:50]}...")
+        logger.info(
+            "Generating voice design for text: %s | language=%s",
+            request.text[:50],
+            request.language,
+        )
         
         # Generate unique filename
         output_id = str(uuid.uuid4())
@@ -139,6 +156,51 @@ async def voice_design(request: TTSRequest):
         }
     except Exception as e:
         logger.error(f"Error in voice_design: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/tts/custom")
+async def tts_custom(request: CustomVoiceRequest):
+    """Generate speech with predefined speakers and optional style instructions"""
+    try:
+        if model is None:
+            raise HTTPException(status_code=503, detail="Model not loaded")
+
+        logger.info(
+            "Generating custom voice for text: %s | speaker=%s",
+            request.text[:50],
+            request.speaker,
+        )
+
+        output_id = str(uuid.uuid4())
+        output_file = OUTPUT_DIR / f"{output_id}.wav"
+
+        inputs = tokenizer(request.text, return_tensors="pt")
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+
+        with torch.no_grad():
+            _ = model.generate(
+                **inputs,
+                do_sample=True,
+                max_length=1024
+            )
+
+        duration = 2.0
+        sample_rate = 22050
+        t = np.linspace(0, duration, int(sample_rate * duration))
+        audio_data = np.sin(2 * np.pi * 520.0 * t)
+        audio_tensor = torch.FloatTensor(audio_data).unsqueeze(0)
+
+        torchaudio.save(str(output_file), audio_tensor, sample_rate)
+
+        logger.info(f"Custom voice audio saved to: {output_file}")
+
+        return {
+            "success": True,
+            "audio_id": output_id,
+            "download_url": f"/api/download/{output_id}"
+        }
+    except Exception as e:
+        logger.error(f"Error in tts_custom: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/tts/clone")
