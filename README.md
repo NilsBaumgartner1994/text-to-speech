@@ -7,7 +7,7 @@ A simple and easy-to-use Text-to-Speech (TTS) web application powered by **Qwen 
 - 🎤 **Voice Design**: Generate speech from text with customizable voice presets, speed, and pitch
 - 🎭 **Voice Clone**: Clone a voice from a reference audio file and generate speech in that voice
 - 🐳 **Docker Support**: Easy deployment with Docker Compose
-- 🌐 **Web UI**: Clean and intuitive web interface
+- 🌐 **Web UI**: React-based interface that mirrors the Qwen3-TTS demo layout
 - ⚡ **Fast Processing**: Optimized for performance with GPU support
 
 ## Prerequisites
@@ -32,8 +32,10 @@ docker-compose up -d
 
 4. Open your browser and navigate to:
 ```
-http://localhost:8000
+http://localhost:3000
 ```
+
+The API is available at `http://localhost:8000`.
 
 ## Usage
 
@@ -54,14 +56,23 @@ http://localhost:8000
 4. Click "Generate Cloned Speech"
 5. Listen to the generated audio or download it
 
+### TTS (CustomVoice) Tab
+
+1. Enter the text you want to convert to speech
+2. Choose a predefined speaker
+3. Add optional style instructions
+4. Click "Generate Custom Voice"
+5. Listen to the generated audio or download it
+
 ## API Endpoints
 
 The application exposes the following REST API endpoints:
 
-- `GET /` - Web UI
+- `GET /` - Backend status page
 - `GET /health` - Health check endpoint
 - `POST /api/tts/design` - Generate speech with voice design parameters
 - `POST /api/tts/clone` - Generate speech with voice cloning
+- `POST /api/tts/custom` - Generate speech with predefined speakers and style prompts
 - `GET /api/download/{audio_id}` - Download generated audio file
 - `GET /api/voices` - List available voice presets
 
@@ -71,7 +82,7 @@ The application exposes the following REST API endpoints:
 
 The `docker-compose.yml` file includes the following configurations:
 
-- **Port Mapping**: `8000:8000` (can be changed if needed)
+- **Port Mapping**: `3000:80` for the React UI and `8000:8000` for the API
 - **Resource Limits**: 4 CPUs and 8GB RAM (adjust based on your system)
 - **Volumes**: Persistent storage for outputs, uploads, and model cache
 
@@ -98,13 +109,13 @@ pip install -r requirements.txt
 python app.py
 ```
 
-4. Access the application at `http://localhost:8000`
+4. Access the application at `http://localhost:3000`
 
 ## Architecture
 
 - **Backend**: FastAPI (Python)
 - **Model**: Qwen3-TTS-12Hz-1.7B from Hugging Face
-- **Frontend**: HTML, CSS, JavaScript (Vanilla)
+- **Frontend**: React (Vite) served via Nginx
 - **Audio Processing**: PyTorch, Torchaudio
 - **Deployment**: Docker, Docker Compose
 
@@ -112,7 +123,7 @@ python app.py
 
 ### Application won't start
 
-- Check Docker logs: `docker-compose logs -f tts-service`
+- Check Docker logs: `docker-compose logs -f tts-service web-ui`
 - Ensure ports are not in use: `lsof -i :8000`
 - Verify Docker has enough resources allocated
 
