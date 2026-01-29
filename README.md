@@ -1,6 +1,6 @@
 # Text-to-Speech Web Application
 
-A simple and easy-to-use Text-to-Speech (TTS) web application powered by **Qwen TTS (Qwen3-TTS-1.7B)** model. This application provides a minimal web interface with two main features: Voice Design and Voice Clone.
+A simple and easy-to-use Text-to-Speech (TTS) web application powered by **Qwen TTS (Qwen3-TTS-12Hz-1.7B-Base)** model. This application provides a minimal web interface with two main features: Voice Design and Voice Clone.
 
 ## Features
 
@@ -92,7 +92,7 @@ You can customize the following environment variables in `docker-compose.yml`:
 
 - `TRANSFORMERS_CACHE`: Cache directory for Hugging Face models
 - `HF_HOME`: Hugging Face home directory
-- `MODEL_NAME`: Override the model ID (default: `Qwen/Qwen3-TTS-1.7B`)
+- `MODEL_NAME`: Override the model ID (default: `Qwen/Qwen3-TTS-12Hz-1.7B-Base`)
 - `MODEL_PATH`: Point to a local, pre-downloaded model folder
 - `HF_ENDPOINT`: Optional Hugging Face mirror endpoint (e.g. `https://hf-mirror.com`)
 
@@ -117,7 +117,7 @@ python app.py
 ## Architecture
 
 - **Backend**: FastAPI (Python)
-- **Model**: Qwen3-TTS-1.7B from Hugging Face
+- **Model**: Qwen3-TTS-12Hz-1.7B-Base from Hugging Face
 - **Frontend**: React (Vite) served via Nginx
 - **Audio Processing**: PyTorch, Torchaudio
 - **Deployment**: Docker, Docker Compose
@@ -141,14 +141,14 @@ python app.py
 
 The public model is hosted on Hugging Face at:
 
-- https://huggingface.co/Qwen/Qwen3-TTS-1.7B
+- https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base
 
 If you cannot reach Hugging Face directly, you can download from a mirror and point the
 service to the local folder:
 
 ```bash
 git lfs install
-git clone https://hf-mirror.com/Qwen/Qwen3-TTS-1.7B
+git clone https://hf-mirror.com/Qwen/Qwen3-TTS-12Hz-1.7B-Base
 ```
 
 Then set `MODEL_PATH` to the cloned folder (or export `HF_ENDPOINT=https://hf-mirror.com`
@@ -166,7 +166,7 @@ This project is open-source and available under the MIT License.
 
 ## Credits
 
-- Powered by [Qwen TTS](https://huggingface.co/Qwen/Qwen3-TTS-1.7B)
+- Powered by [Qwen TTS](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base)
 - Built with FastAPI and PyTorch
 
 ## Support

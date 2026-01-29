@@ -47,7 +47,7 @@ export default function App() {
   const handleDesignSubmit = async (event) => {
     event.preventDefault();
     setDesignLoading(true);
-    setDesignStatus({ message: 'Generating audio with the 1.7B model...', tone: 'info' });
+    setDesignStatus({ message: 'Generating audio with the 12Hz 1.7B base model...', tone: 'info' });
     setDesignAudioUrl('');
 
     try {
@@ -83,7 +83,7 @@ export default function App() {
     }
 
     setCloneLoading(true);
-    setCloneStatus({ message: 'Cloning voice with the 1.7B base model...', tone: 'info' });
+    setCloneStatus({ message: 'Cloning voice with the 12Hz 1.7B base model...', tone: 'info' });
     setCloneAudioUrl('');
 
     try {
@@ -158,8 +158,8 @@ export default function App() {
           <li>
             <strong>TTS (CustomVoice)</strong>: Generate speech with predefined speakers and optional
             style instructions. Built with{' '}
-            <a href="https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B" target="_blank" rel="noreferrer">
-              Qwen3-TTS
+            <a href="https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-Base" target="_blank" rel="noreferrer">
+              Qwen3-TTS-12Hz-1.7B-Base
             </a>{' '}
             by Alibaba Qwen Team.
           </li>
