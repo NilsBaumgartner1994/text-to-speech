@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech - Qwen TTS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 1.1em;
+            border: none;
+            background: transparent;
+        }
+
+        .tab:hover {
+            background: #e0e0e0;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
+        textarea, select, input[type="file"], input[type="range"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        textarea:focus, select:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .slider-container {
+            margin-top: 10px;
+        }
+
+        .slider-value {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            border: 2px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px;
+            background: #f5f5f5;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        .file-name {
+            margin-top: 8px;
+            color: #667eea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎤 Text-to-Speech</h1>
+            <p>Powered by Qwen TTS (Qwen3-TTS-12Hz-1.7B)</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('design')">Voice Design</button>
+            <button class="tab" onclick="switchTab('clone')">Voice Clone</button>
+        </div>
+
+        <!-- Voice Design Tab -->
+        <div id="design-tab" class="tab-content active">
+            <form id="design-form" onsubmit="generateDesignVoice(event)">
+                <div class="form-group">
+                    <label for="design-text">Enter Text to Convert to Speech:</label>
+                    <textarea id="design-text" placeholder="Type or paste your text here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="voice-preset">Voice Preset:</label>
+                    <select id="voice-preset">
+                        <option value="default">Default Voice</option>
+                        <option value="female">Female Voice</option>
+                        <option value="male">Male Voice</option>
+                        <option value="child">Child Voice</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="speed">Speed: <span class="slider-value" id="speed-value">1.0x</span></label>
+                    <input type="range" id="speed" min="0.5" max="2.0" step="0.1" value="1.0" 
+                           oninput="document.getElementById('speed-value').textContent = this.value + 'x'">
+                </div>
+
+                <div class="form-group">
+                    <label for="pitch">Pitch: <span class="slider-value" id="pitch-value">1.0x</span></label>
+                    <input type="range" id="pitch" min="0.5" max="2.0" step="0.1" value="1.0" 
+                           oninput="document.getElementById('pitch-value').textContent = this.value + 'x'">
+                </div>
+
+                <button type="submit">Generate Speech</button>
+            </form>
+
+            <div class="loading" id="design-loading">
+                <div class="spinner"></div>
+                <p>Generating speech...</p>
+            </div>
+
+            <div class="error" id="design-error"></div>
+
+            <div class="result" id="design-result">
+                <h3>Generated Audio:</h3>
+                <audio id="design-audio" controls></audio>
+                <br><br>
+                <a id="design-download" download="speech.wav">
+                    <button type="button">Download Audio</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Voice Clone Tab -->
+        <div id="clone-tab" class="tab-content">
+            <form id="clone-form" onsubmit="generateCloneVoice(event)">
+                <div class="form-group">
+                    <label for="clone-text">Enter Text to Convert to Speech:</label>
+                    <textarea id="clone-text" placeholder="Type or paste your text here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="reference-audio">Upload Reference Audio (Voice to Clone):</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="reference-audio" accept="audio/*" required onchange="updateFileName(this)">
+                        <label for="reference-audio" class="file-input-label">
+                            📁 Click to select audio file
+                        </label>
+                    </div>
+                    <div class="file-name" id="file-name"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="clone-speed">Speed: <span class="slider-value" id="clone-speed-value">1.0x</span></label>
+                    <input type="range" id="clone-speed" min="0.5" max="2.0" step="0.1" value="1.0" 
+                           oninput="document.getElementById('clone-speed-value').textContent = this.value + 'x'">
+                </div>
+
+                <button type="submit">Generate Cloned Speech</button>
+            </form>
+
+            <div class="loading" id="clone-loading">
+                <div class="spinner"></div>
+                <p>Cloning voice and generating speech...</p>
+            </div>
+
+            <div class="error" id="clone-error"></div>
+
+            <div class="result" id="clone-result">
+                <h3>Cloned Voice Audio:</h3>
+                <audio id="clone-audio" controls></audio>
+                <br><br>
+                <a id="clone-download" download="cloned-speech.wav">
+                    <button type="button">Download Audio</button>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function updateFileName(input) {
+            const fileName = input.files[0]?.name;
+            const fileNameDiv = document.getElementById('file-name');
+            if (fileName) {
+                fileNameDiv.textContent = '✓ ' + fileName;
+            } else {
+                fileNameDiv.textContent = '';
+            }
+        }
+
+        async function generateDesignVoice(event) {
+            event.preventDefault();
+
+            const text = document.getElementById('design-text').value;
+            const voicePreset = document.getElementById('voice-preset').value;
+            const speed = parseFloat(document.getElementById('speed').value);
+            const pitch = parseFloat(document.getElementById('pitch').value);
+
+            // Show loading, hide results and errors
+            document.getElementById('design-loading').classList.add('show');
+            document.getElementById('design-result').classList.remove('show');
+            document.getElementById('design-error').classList.remove('show');
+
+            try {
+                const response = await fetch('/api/tts/design', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        voice_preset: voicePreset,
+                        speed: speed,
+                        pitch: pitch
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate speech');
+                }
+
+                const data = await response.json();
+                
+                // Set audio source
+                const audioElement = document.getElementById('design-audio');
+                audioElement.src = data.download_url;
+                
+                // Set download link
+                const downloadLink = document.getElementById('design-download');
+                downloadLink.href = data.download_url;
+
+                // Show result
+                document.getElementById('design-result').classList.add('show');
+            } catch (error) {
+                const errorDiv = document.getElementById('design-error');
+                errorDiv.textContent = 'Error: ' + error.message;
+                errorDiv.classList.add('show');
+            } finally {
+                document.getElementById('design-loading').classList.remove('show');
+            }
+        }
+
+        async function generateCloneVoice(event) {
+            event.preventDefault();
+
+            const text = document.getElementById('clone-text').value;
+            const audioFile = document.getElementById('reference-audio').files[0];
+            const speed = parseFloat(document.getElementById('clone-speed').value);
+
+            if (!audioFile) {
+                alert('Please select a reference audio file');
+                return;
+            }
+
+            // Show loading, hide results and errors
+            document.getElementById('clone-loading').classList.add('show');
+            document.getElementById('clone-result').classList.remove('show');
+            document.getElementById('clone-error').classList.remove('show');
+
+            try {
+                const formData = new FormData();
+                formData.append('text', text);
+                formData.append('audio_file', audioFile);
+                formData.append('speed', speed);
+
+                const response = await fetch('/api/tts/clone', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate cloned speech');
+                }
+
+                const data = await response.json();
+                
+                // Set audio source
+                const audioElement = document.getElementById('clone-audio');
+                audioElement.src = data.download_url;
+                
+                // Set download link
+                const downloadLink = document.getElementById('clone-download');
+                downloadLink.href = data.download_url;
+
+                // Show result
+                document.getElementById('clone-result').classList.add('show');
+            } catch (error) {
+                const errorDiv = document.getElementById('clone-error');
+                errorDiv.textContent = 'Error: ' + error.message;
+                errorDiv.classList.add('show');
+            } finally {
+                document.getElementById('clone-loading').classList.remove('show');
+            }
+        }
+
+        // Check backend health on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                console.log('Backend health:', data);
+            } catch (error) {
+                console.error('Backend not available:', error);
+            }
+        });
+    </script>
+</body>
+</html>
