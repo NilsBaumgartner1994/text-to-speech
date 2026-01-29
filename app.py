@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile
+from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -16,6 +16,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Text-to-Speech Service")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Create necessary directories
 OUTPUT_DIR = Path("/tmp/tts_outputs")
@@ -37,6 +40,7 @@ def load_model():
     global model, tokenizer
     try:
         logger.info(f"Loading model: {MODEL_NAME}")
+        logger.info("This may take several minutes on first run...")
         tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(
             MODEL_NAME,
@@ -49,7 +53,9 @@ def load_model():
         logger.info("Model loaded successfully")
     except Exception as e:
         logger.error(f"Error loading model: {e}")
-        raise
+        logger.warning("Model loading failed. The service will continue but TTS generation may not work.")
+        # Don't raise - allow service to start even if model loading fails
+        # This is useful for testing the UI without the full model
 
 # Request models
 class TTSRequest(BaseModel):
@@ -137,7 +143,7 @@ async def voice_design(request: TTSRequest):
 
 @app.post("/api/tts/clone")
 async def voice_clone(
-    text: str = File(...),
+    text: str = Form(...),
     audio_file: UploadFile = File(...)
 ):
     """Generate speech using voice cloning"""
