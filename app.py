@@ -36,7 +36,7 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 # Model configuration
-MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen3-TTS-12Hz-1.7B")
+MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen3-TTS-1.7B")
 MODEL_PATH = os.getenv("MODEL_PATH")
 HF_ENDPOINT = os.getenv("HF_ENDPOINT")
 device = "cuda" if torch.cuda.is_available() else "cpu"
